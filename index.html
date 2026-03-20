@@ -2,51 +2,42 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>FIDÉ DUCK RACE - CASINO ONLINE</title>
+    <title>FIDÉ DUCK RACE - ONLINE</title>
     <style>
         body { background: #0a0a0a; color: white; font-family: 'Segoe UI', Arial; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        
-        /* Header Stats */
-        #header { background: #1a1a1a; padding: 15px; display: flex; justify-content: space-around; align-items: center; border-bottom: 2px solid #333; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        #header { background: #1a1a1a; padding: 15px; display: flex; justify-content: space-around; align-items: center; border-bottom: 2px solid #333; }
         .stat-box { font-size: 20px; font-weight: bold; }
-
-        /* Layout Main */
         #main-container { display: flex; flex: 1; overflow: hidden; }
-        
-        /* Đuờng đua */
         #track-container { flex: 3; position: relative; background: #1e272e; border-right: 20px dashed #ff4757; margin: 10px; overflow-y: auto; border-radius: 5px; }
-        .lane { height: 45px; border-bottom: 1px solid #2c3e50; position: relative; display: flex; align-items: center; background: rgba(255,255,255,0.02); }
-        .duck { position: absolute; left: 0; width: 55px; height: 35px; z-index: 2; transition: left 0.1s linear; }
+        .lane { height: 45px; border-bottom: 1px solid #2c3e50; position: relative; display: flex; align-items: center; }
+        
+        /* ĐÃ SỬA: Lật ngược vịt quay sang phải */
+        .duck { 
+            position: absolute; 
+            left: 0; 
+            width: 55px; 
+            height: 35px; 
+            z-index: 2; 
+            transition: left 0.1s linear; 
+            transform: scaleX(-1); /* Lật ngang ảnh */
+        }
+        
         .lane-num { margin-left: 10px; font-weight: bold; color: #444; font-size: 18px; }
-
-        /* Chat Box */
         #chat-container { flex: 1; background: #111; display: flex; flex-direction: column; border: 1px solid #333; margin: 10px 10px 10px 0; border-radius: 8px; }
-        #chat-messages { flex: 1; overflow-y: auto; padding: 10px; font-size: 13px; scroll-behavior: smooth; }
-        .msg { margin-bottom: 8px; padding: 5px; border-radius: 4px; background: #1a1a1a; }
+        #chat-messages { flex: 1; overflow-y: auto; padding: 10px; font-size: 13px; }
+        .msg { margin-bottom: 8px; padding: 5px; border-radius: 4px; background: #1a1a1a; border-bottom: 1px solid #222; }
         .msg-user { color: #00ff00; font-weight: bold; }
         .msg-bet { color: #ff9f43; font-style: italic; }
-        .msg-sys { color: #54a0ff; font-weight: bold; text-align: center; border: 1px solid #54a0ff; margin: 5px 0; }
-        
-        #chat-input-area { padding: 10px; display: flex; gap: 5px; background: #1a1a1a; border-top: 1px solid #333; }
-        #chat-input { flex: 1; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #000; color: white; outline: none; }
-
-        /* Thanh điều khiển */
+        #chat-input-area { padding: 10px; display: flex; gap: 5px; background: #1a1a1a; }
+        #chat-input { flex: 1; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #000; color: white; }
         #controls { background: #1a1a1a; padding: 15px; display: flex; justify-content: center; align-items: center; gap: 15px; border-top: 2px solid #333; }
-        button { padding: 10px 20px; font-size: 15px; cursor: pointer; border: none; border-radius: 5px; font-weight: bold; transition: 0.2s; }
+        button { padding: 10px 20px; font-size: 15px; cursor: pointer; border: none; border-radius: 5px; font-weight: bold; }
         .btn-bet { background: #f1c40f; color: #000; }
-        .btn-bet:hover { background: #d4ac0d; transform: scale(1.05); }
         .btn-allin { background: #ff4757; color: white; }
-        input[type="number"] { padding: 8px; width: 50px; font-size: 18px; border-radius: 5px; text-align: center; }
-        
         #total-bet-display { position: absolute; top: 10px; right: 20px; font-size: 22px; color: #00ffff; font-weight: bold; z-index: 10; background: rgba(0,0,0,0.7); padding: 5px 15px; border-radius: 20px; }
-        #history-bar { background: #000; padding: 5px; text-align: center; font-size: 14px; color: #aaa; border-bottom: 1px solid #222; }
     </style>
 </head>
 <body>
-
-<div id="history-bar">
-    📊 LỊCH SỬ THẮNG (CẦU): <span id="history-list" style="color: #f1c40f; font-weight: bold;">Đang tải...</span>
-</div>
 
 <div id="header">
     <div class="stat-box" style="color: #f1c40f;">💰 VỐN: $<span id="balance">5000</span></div>
@@ -65,18 +56,17 @@
     </div>
 
     <div id="chat-container">
-        <div style="padding: 10px; background: #222; text-align: center; font-weight: bold; font-size: 14px;">💬 KÊNH CHAT TRỰC TUYẾN</div>
         <div id="chat-messages"></div>
         <div id="chat-input-area">
             <input type="text" id="chat-input" placeholder="Nhập tin nhắn..." onkeypress="if(event.key==='Enter') sendMessage()">
-            <button onclick="sendMessage()" style="background: #54a0ff; color: white;">Gửi</button>
+            <button onclick="sendMessage()" style="background: #54a0ff; color: white; border-radius: 4px;">Gửi</button>
         </div>
     </div>
 </div>
 
 <div id="controls">
     <label>VỊT SỐ:</label>
-    <input type="number" id="selected-duck" value="1" min="1" max="12">
+    <input type="number" id="selected-duck" value="1" min="1" max="12" style="width: 50px; padding: 8px;">
     <button class="btn-bet" onclick="addBet(1000)">+ $1000</button>
     <button class="btn-bet" onclick="addBet(5000)">+ $5000</button>
     <button class="btn-allin" onclick="allIn()">ALL-IN</button>
@@ -87,7 +77,7 @@
 </audio>
 
 <script>
-    // === CẤU HÌNH FIREBASE ĐÃ DÁN LINK CỦA BẠN ===
+    //: Link có HTTPS và /.json chuẩn
     const DB_URL = "https://duavitfide-default-rtdb.firebaseio.com/.json"; 
     
     const playerName = "User_" + Math.floor(Math.random() * 999);
@@ -97,36 +87,23 @@
     let bettingPhase = true;
     const bgMusic = document.getElementById('bg-music');
 
-    // 1. Đồng bộ dữ liệu Realtime (Tổng cược, Chat, Lịch sử)
+    // Tự động đồng bộ mỗi 1.5 giây
     setInterval(async () => {
         try {
             const res = await fetch(DB_URL);
             const data = await res.json();
             if (data) {
-                // Cập nhật tổng cược bàn
                 document.getElementById('total-bet-display').innerText = `🏦 TỔNG CƯỢC: $${data.total_bet || 0}`;
-                
-                // Cập nhật Chat
                 if (data.messages) {
                     const chatBox = document.getElementById('chat-messages');
                     const msgs = Object.values(data.messages);
-                    chatBox.innerHTML = msgs.map(m => `
-                        <div class="msg">
-                            <span class="msg-user">${m.user}:</span> 
-                            <span class="${m.type==='bet'?'msg-bet':''}">${m.text}</span>
-                        </div>`).join('');
+                    chatBox.innerHTML = msgs.map(m => `<div class="msg"><span class="msg-user">${m.user}:</span> <span class="${m.type==='bet'?'msg-bet':''}">${m.text}</span></div>`).join('');
                     chatBox.scrollTop = chatBox.scrollHeight;
                 }
-
-                // Cập nhật Lịch sử cầu
-                if (data.history) {
-                    document.getElementById('history-list').innerText = data.history.join(" - ");
-                }
             }
-        } catch (e) {}
-    }, 1000);
+        } catch (e) { console.log("Lỗi kết nối:", e); }
+    }, 1500);
 
-    // 2. Hàm gửi tin nhắn/thông báo cược
     async function sendMessage(text = null, type = 'text') {
         const input = document.getElementById('chat-input');
         const message = text || input.value;
@@ -137,37 +114,29 @@
             const data = await res.json();
             let messages = data.messages ? Object.values(data.messages) : [];
             messages.push({ user: playerName, text: message, type: type });
-            if(messages.length > 30) messages.shift(); // Giữ 30 tin nhắn
-
+            if(messages.length > 20) messages.shift();
             await fetch(DB_URL, { method: 'PATCH', body: JSON.stringify({ messages: messages }) });
             input.value = "";
         } catch (e) {}
     }
 
-    // 3. Hàm Đặt Cược
     async function addBet(amt) {
-        if (!bettingPhase) { alert("Đang đua, không thể cược!"); return; }
-        if (balance < amt) { alert("Không đủ tiền!"); return; }
-
+        if (!bettingPhase || balance < amt) return;
         balance -= amt;
         myBet += amt;
         document.getElementById('balance').innerText = balance;
         document.getElementById('my-bet').innerText = myBet;
-        
-        // Mở nhạc (Chrome bắt buộc phải có tương tác mới phát nhạc)
-        bgMusic.play().catch(e => {});
+        bgMusic.play().catch(() => {});
 
         const res = await fetch(DB_URL);
         const data = await res.json();
         const newTotal = (data.total_bet || 0) + amt;
-        
         await fetch(DB_URL, { method: 'PATCH', body: JSON.stringify({ total_bet: newTotal }) });
-        sendMessage(`vừa cược $${amt} vào Vịt ${document.getElementById('selected-duck').value}`, 'bet');
+        sendMessage(`cược $${amt} vào Vịt ${document.getElementById('selected-duck').value}`, 'bet');
     }
 
     function allIn() { addBet(balance); }
 
-    // 4. Đồng hồ đếm ngược
     let timerInterval = setInterval(() => {
         timer--;
         if (timer > 0) {
@@ -178,60 +147,27 @@
         }
     }, 1000);
 
-    // 5. Logic Đua Vịt
     function startRace() {
         bettingPhase = false;
         document.getElementById('timer').innerText = `🚀 ĐANG ĐUA!`;
-        document.getElementById('timer').style.color = "red";
-        
         let positions = new Array(12).fill(0);
-        const trackWidth = document.getElementById('track-container').offsetWidth - 80;
-
         let raceInterval = setInterval(() => {
             for (let i = 0; i < 12; i++) {
-                // Tỉ lệ random công bằng cho mọi máy
                 positions[i] += Math.random() * 8;
                 document.getElementById(`duck${i+1}`).style.left = positions[i] + 'px';
-                
-                if (positions[i] >= trackWidth) {
+                if (positions[i] >= document.getElementById('track-container').offsetWidth - 60) {
                     clearInterval(raceInterval);
-                    finishGame(i + 1);
+                    finish(i + 1);
                     break;
                 }
             }
         }, 50);
     }
 
-    // 6. Kết thúc và lưu lịch sử
-    async function finishGame(winNum) {
-        const selected = document.getElementById('selected-duck').value;
+    async function finish(winNum) {
         bgMusic.pause();
-        bgMusic.currentTime = 0;
-
-        // Cập nhật lịch sử thắng lên Firebase
-        try {
-            const res = await fetch(DB_URL);
-            const data = await res.json();
-            let history = data.history || [];
-            history.unshift(winNum);
-            if(history.length > 10) history.pop();
-
-            // Reset tổng cược và cập nhật lịch sử
-            await fetch(DB_URL, { 
-                method: 'PATCH', 
-                body: JSON.stringify({ total_bet: 0, history: history }) 
-            });
-        } catch (e) {}
-
-        if (selected == winNum && myBet > 0) {
-            let winAmt = myBet * 12;
-            alert(`🎉 THẮNG LỚN! Vịt số ${winNum} về nhất. Bạn nhận được $${winAmt}`);
-            balance += winAmt;
-        } else {
-            alert(`KẾT THÚC! Vịt số ${winNum} về nhất. Chúc bạn may mắn lần sau!`);
-        }
-
-        // Tự động làm mới để vào ván mới
+        alert(`Vịt số ${winNum} về nhất!`);
+        await fetch(DB_URL, { method: 'PATCH', body: JSON.stringify({ total_bet: 0 }) });
         location.reload();
     }
 </script>
