@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>FIDÉ CASINO - ĐỒNG BỘ THÔNG BÁO</title>
+    <title>FIDÉ CASINO - FIX SOUND</title>
     <style>
         body { background: #0a0a0a; color: white; font-family: 'Segoe UI', Arial; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         #header { background: #1a1a1a; padding: 15px; display: flex; justify-content: space-around; border-bottom: 2px solid #333; align-items: center; }
@@ -15,28 +15,34 @@
         .lane { height: 45px; border-bottom: 1px solid #2c3e50; position: relative; display: flex; align-items: center; }
         .lane-num { margin-left: 10px; color: #555; font-weight: bold; width: 60px; z-index: 1; font-size: 11px; }
         
-        /* Chỉnh transition cực mượt để tránh dịch chuyển */
         .duck-wrapper { position: absolute; left: 0; display: flex; flex-direction: column; align-items: center; transition: left 0.4s linear; z-index: 5; width: 80px; }
         .duck-img { width: 45px; height: auto; transform: scaleX(-1); }
         .duck-label { font-size: 10px; color: #00ffff; font-weight: bold; background: rgba(0,0,0,0.8); padding: 1px 5px; border-radius: 3px; white-space: nowrap; margin-bottom: 2px; }
         
-        #chat-container { flex: 1; background: #111; display: flex; flex-direction: column; border: 1px solid #333; margin: 10px 10px 10px 0; border-radius: 8px; }
-        #chat-messages { flex: 1; overflow-y: auto; padding: 10px; font-size: 13px; color: #00ff00; }
+        #side-container { flex: 1; background: #111; display: flex; flex-direction: column; border: 1px solid #333; margin: 10px 10px 10px 0; border-radius: 8px; overflow: hidden; }
+        #chat-messages { flex: 2; overflow-y: auto; padding: 10px; font-size: 13px; color: #00ff00; border-bottom: 1px solid #333; }
+        
+        #history-box { flex: 1; background: #000; padding: 10px; overflow-y: auto; }
+        .history-title { font-size: 12px; color: #f1c40f; text-align: center; font-weight: bold; margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        .history-item { font-size: 12px; padding: 3px 0; border-bottom: 1px solid #111; display: flex; justify-content: space-between; }
+        .win-name { color: #00ffff; font-weight: bold; }
+
         #controls { background: #1a1a1a; padding: 15px; text-align: center; border-top: 2px solid #333; }
         button { padding: 10px 15px; margin: 5px; font-weight: bold; cursor: pointer; border-radius: 4px; border: none; }
         .btn-bet { background: #f1c40f; color: #000; }
         #total-display { position: absolute; top: 10px; right: 20px; color: #00ffff; font-size: 20px; font-weight: bold; background: rgba(0,0,0,0.8); padding: 5px 15px; border-radius: 20px; z-index: 10; border: 1px solid #00ffff; }
         
-        /* Overlay thông báo hiện cho tất cả mọi người */
         #winner-overlay { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.95); border: 5px solid gold; padding: 40px; border-radius: 20px; text-align: center; z-index: 999; display: none; box-shadow: 0 0 50px rgba(255, 215, 0, 0.5); }
+        
+        /* Nút âm thanh */
+        #sound-control { position: fixed; bottom: 80px; right: 20px; background: #444; color: white; padding: 10px; border-radius: 50%; cursor: pointer; z-index: 1000; border: 2px solid #666; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
-<body>
+<body onclick="startAudio()"> <div id="sound-control" onclick="toggleAudio()">🎵</div>
 
 <div id="winner-overlay">
     <div style="font-size: 24px; color:white; margin-bottom: 10px;">🎊 CHÚC MỪNG CHIẾN THẮNG 🎊</div>
     <div id="winner-name" style="color: gold; font-size: 50px; font-weight: bold; text-transform: uppercase;">...</div>
-    <div style="color: #aaa; margin-top: 20px;">Ván mới sẽ bắt đầu sau ít giây...</div>
 </div>
 
 <div id="header">
@@ -63,9 +69,16 @@
             }
         </script>
     </div>
-    <div id="chat-container">
+    
+    <div id="side-container">
         <div id="chat-messages"></div>
-        <div style="padding:10px;"><input type="text" id="chat-input" placeholder="Nhập tin nhắn..." onkeypress="if(event.key==='Enter') sendMsg()" style="width:90%; background:#000; color:#fff; border:1px solid #444; padding:8px;"></div>
+        <div style="padding:5px; border-bottom: 1px solid #333;">
+            <input type="text" id="chat-input" placeholder="Chat..." onkeypress="if(event.key==='Enter') sendMsg()" style="width:90%; background:#000; color:#fff; border:1px solid #444; padding:5px; font-size:12px;">
+        </div>
+        <div id="history-box">
+            <div class="history-title">📜 LỊCH SỬ THẮNG</div>
+            <div id="history-list"></div>
+        </div>
     </div>
 </div>
 
@@ -76,34 +89,49 @@
     <button style="background: #ff4757; color: white;" onclick="bet(parseInt(document.getElementById('bal-val').innerText))">ALL-IN</button>
 </div>
 
-<audio id="audio-player" loop><source src="background_music.mp3" type="audio/mpeg"></audio>
+<audio id="audio-bg" loop>
+    <source src="background_music.mp3" type="audio/mpeg">
+</audio>
 
 <script>
     const DB = "https://duck-rascist-default-rtdb.asia-southeast1.firebasedatabase.app/.json";
     let bal = 5000, myBet = 0, isBetting = true, positions = new Array(12).fill(0);
     const pName = "User_" + Math.floor(Math.random() * 999);
     const isHost = (window.location.hash === "#host");
+    const bgMusic = document.getElementById('audio-bg');
 
-    // LẤY DỮ LIỆU TỪ SERVER
+    // HÀM BẬT NHẠC
+    function startAudio() {
+        bgMusic.play().catch(() => {});
+    }
+
+    function toggleAudio() {
+        if (bgMusic.paused) {
+            bgMusic.play();
+            document.getElementById('sound-control').innerText = "🎵";
+        } else {
+            bgMusic.pause();
+            document.getElementById('sound-control').innerText = "🔇";
+        }
+    }
+
+    // ĐỒNG BỘ DỮ LIỆU
     setInterval(async () => {
         try {
             const r = await fetch(DB);
             const data = await r.json();
             if(!data) return;
 
-            // 1. Đồng bộ Timer
             const serverTime = parseInt(data.timer);
             document.getElementById('timer-display').innerText = serverTime > 0 ? "⏳ ĐỢI CƯỢC: " + serverTime + "s" : "🚀 ĐANG ĐUA!";
             isBetting = serverTime > 0;
 
-            // 2. Đồng bộ vị trí (Mượt hơn với transition dài hơn)
             if(data.race_pos) {
                 data.race_pos.forEach((pos, i) => {
                     document.getElementById('wrapper' + (i+1)).style.left = pos + "px";
                 });
             }
 
-            // 3. FIX: Hiển thị thông báo thắng cuộc cho TẤT CẢ máy
             const overlay = document.getElementById('winner-overlay');
             if(data.winner_name && data.winner_name !== "none") {
                 document.getElementById('winner-name').innerText = data.winner_name;
@@ -112,20 +140,29 @@
                 overlay.style.display = 'none';
             }
 
+            if(data.history) {
+                const histList = Array.isArray(data.history) ? data.history : Object.values(data.history);
+                document.getElementById('history-list').innerHTML = histList.slice().reverse().map((name, index) => `
+                    <div class="history-item">
+                        <span>Ván #${histList.length - index}</span>
+                        <span class="win-name">${name}</span>
+                    </div>
+                `).join('');
+            }
+
             document.getElementById('total-display').innerText = "🏦 TỔNG CƯỢC: $" + (data.total_bet || 0);
             
             if(data.messages) {
                 const msgs = Array.isArray(data.messages) ? data.messages : Object.values(data.messages);
-                document.getElementById('chat-messages').innerHTML = msgs.map(m => `<div style="margin-bottom:5px;"><b>${m.u || 'S'}:</b> ${m.t || m}</div>`).join('');
+                document.getElementById('chat-messages').innerHTML = msgs.map(m => `<div style="margin-bottom:2px;"><b>${m.u || 'S'}:</b> ${m.t || m}</div>`).join('');
+                document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
             }
         } catch(e) {}
-    }, 400); 
+    }, 450); 
 
-    // MÁY CHỦ TÍNH TOÁN (HOST)
     if(isHost) {
         let serverTimer = 30;
         let winnerFound = "none";
-        
         setInterval(async () => {
             if(serverTimer > 0) {
                 serverTimer--;
@@ -133,10 +170,9 @@
                 positions = new Array(12).fill(0);
                 await fetch(DB, { method: 'PATCH', body: JSON.stringify({ timer: serverTimer, race_pos: positions, winner_name: "none" }) });
             } else {
-                // TĂNG TỐC ĐỘ SIÊU CẤP: Nhảy bước ngẫu nhiên lớn
                 let localWinnerIdx = -1;
                 positions = positions.map((p, i) => {
-                    let move = Math.random() * 35 + 10; // Tốc độ cực nhanh
+                    let move = Math.random() * 45 + 15;
                     let newP = p + move;
                     if(newP > 950 && localWinnerIdx === -1) localWinnerIdx = i;
                     return newP;
@@ -144,10 +180,14 @@
 
                 if(localWinnerIdx !== -1 && winnerFound === "none") {
                     winnerFound = duckNames[localWinnerIdx];
-                    // Ghi tên người thắng lên Firebase ngay lập tức
-                    await fetch(DB, { method: 'PATCH', body: JSON.stringify({ race_pos: positions, winner_name: winnerFound }) });
+                    const r = await fetch(DB);
+                    const d = await r.json();
+                    let currentHistory = d.history && Array.isArray(d.history) ? d.history : [];
+                    currentHistory.push(winnerFound);
+                    if(currentHistory.length > 5) currentHistory.shift();
+
+                    await fetch(DB, { method: 'PATCH', body: JSON.stringify({ race_pos: positions, winner_name: winnerFound, history: currentHistory }) });
                     
-                    // Giữ thông báo trong 6 giây rồi mới reset
                     setTimeout(async () => {
                         serverTimer = 30;
                         await fetch(DB, { method: 'PATCH', body: JSON.stringify({ total_bet: 0, timer: 30, winner_name: "none", race_pos: new Array(12).fill(0) }) });
@@ -160,9 +200,22 @@
     }
 
     function deposit() {
+        startAudio(); // Kích hoạt nhạc khi nhấn nạp
         bal += 5000;
         document.getElementById('bal-val').innerText = bal;
-        alert("💰 Đã nạp thêm $5000 vào tài khoản!");
+        alert("💰 Đã nạp thêm $5000!");
+    }
+
+    async function bet(amt) {
+        startAudio(); // Kích hoạt nhạc khi nhấn cược
+        if(!isBetting || bal < amt) return;
+        bal -= amt; myBet += amt;
+        document.getElementById('bal-val').innerText = bal;
+        document.getElementById('my-bet-val').innerText = myBet;
+        const r = await fetch(DB);
+        const d = await r.json();
+        await fetch(DB, { method: 'PATCH', body: JSON.stringify({ total_bet: (d.total_bet || 0) + amt }) });
+        sendMsg("đã cược $" + amt + " vào vịt " + document.getElementById('duck-select').value);
     }
 
     async function sendMsg(txt = null) {
@@ -174,17 +227,6 @@
         if(ms.length > 10) ms.shift();
         await fetch(DB, { method: 'PATCH', body: JSON.stringify({ messages: ms }) });
         document.getElementById('chat-input').value = "";
-    }
-
-    async function bet(amt) {
-        if(!isBetting || bal < amt) return;
-        bal -= amt; myBet += amt;
-        document.getElementById('bal-val').innerText = bal;
-        document.getElementById('my-bet-val').innerText = myBet;
-        const r = await fetch(DB);
-        const d = await r.json();
-        await fetch(DB, { method: 'PATCH', body: JSON.stringify({ total_bet: (d.total_bet || 0) + amt }) });
-        sendMsg("đã cược $" + amt + " vào vịt " + document.getElementById('duck-select').value);
     }
 </script>
 </body>
