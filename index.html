@@ -37,7 +37,7 @@
     <div id="track-container">
         <div id="total-display">🏦 TỔNG CƯỢC: $0</div>
         <script>
-            // ĐÃ CẬP NHẬT TÊN VỊT THEO FILE TXT CỦA BẠN 
+            // TÊN VỊT CHUẨN THEO FILE DUCK_NAMES.TXT 
             const duckNames = [
                 "Trà Từ Tay", "Thằng Canh Mộ", "Dùng Thanh Nộ", "Chày Từ Ta", 
                 "Mộ Xum Xuê", "Tôn Ngộ Đu", "Trừ Ta", "Shisha Ngộ Tĩnh", 
@@ -49,7 +49,7 @@
                     <span class="lane-num">LÀN ${i}</span>
                     <div id="wrapper${i}" class="duck-wrapper">
                         <span class="duck-label">${duckNames[i-1]}</span>
-                        <img class="duck-img" src="Vintage-racing.gif" onerror="this.src='https://i.imgur.com/8Yl6SFS.gif'">
+                        <img class="duck-img" src="vintage-racing.gif">
                     </div>
                 </div>`);
             }
@@ -57,7 +57,7 @@
     </div>
 
     <div id="chat-container">
-        <div style="padding: 10px; background: #222; text-align: center; font-size: 12px; font-weight: bold;">💬 BOX CHAT ONLINE</div>
+        <div style="padding: 10px; background: #222; text-align: center; font-size: 12px; font-weight: bold;">💬 KÊNH CHAT TRỰC TUYẾN</div>
         <div id="chat-messages"></div>
         <div id="chat-input-area">
             <input type="text" id="chat-input" placeholder="Nhập tin nhắn..." onkeypress="if(event.key==='Enter') sendMsg()">
@@ -72,10 +72,10 @@
     <button style="background: #ff4757; color: white;" onclick="bet(parseInt(document.getElementById('bal-val').innerText))">ALL-IN</button>
 </div>
 
-<audio id="audio-player" loop><source src="Background_music.mp3" type="audio/mpeg"></audio>
+<audio id="audio-player" loop><source src="background_music.mp3" type="audio/mpeg"></audio>
 
 <script>
-    // NHỚ KIỂM TRA LINK NÀY CÓ KHỚP VỚI FIREBASE CỦA BẠN KHÔNG
+    // LINK FIREBASE CỦA BẠN 
     const DB = "https://duck-rascist-default-rtdb.asia-southeast1.firebasedatabase.app/.json";
     
     let bal = 5000, myBet = 0, timer = 60, isBetting = true;
@@ -84,7 +84,6 @@
     setInterval(async () => {
         try {
             const r = await fetch(DB);
-            if (!r.ok) return;
             const data = await r.json();
             if(data) {
                 document.getElementById('total-display').innerText = "🏦 TỔNG CƯỢC: $" + (data.total_bet || 0);
