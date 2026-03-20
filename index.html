@@ -2,35 +2,27 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>FIDÉ CASINO - ĐUA VỊT ONLINE</title>
+    <title>FIDÉ CASINO - DUCK RACE</title>
     <style>
         body { background: #0a0a0a; color: white; font-family: 'Segoe UI', Arial; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         #header { background: #1a1a1a; padding: 15px; display: flex; justify-content: space-around; border-bottom: 2px solid #333; }
         .stat-box { font-size: 20px; font-weight: bold; }
-        
         #main-container { display: flex; flex: 1; overflow: hidden; }
-        
-        /* ĐƯỜNG ĐUA */
         #track-container { flex: 3; position: relative; background: #1e272e; border-right: 20px dashed #ff4757; margin: 10px; border-radius: 8px; overflow-x: hidden; }
         .lane { height: 45px; border-bottom: 1px solid #2c3e50; position: relative; display: flex; align-items: center; }
-        .lane-num { margin-left: 10px; color: #555; font-weight: bold; width: 60px; z-index: 1; }
-        
-        /* FIX: Quay mặt vịt và hiện tên vịt */
-        .duck-wrapper { position: absolute; left: 0; display: flex; flex-direction: column; align-items: center; transition: left 0.1s linear; z-index: 5; }
-        .duck-img { width: 55px; height: 35px; transform: scaleX(-1); /* Lật ngang ảnh */ }
-        .duck-label { font-size: 10px; color: gold; font-weight: bold; background: rgba(0,0,0,0.5); padding: 0 2px; border-radius: 3px; }
-
-        /* BOX CHAT */
+        .lane-num { margin-left: 10px; color: #555; font-weight: bold; width: 60px; z-index: 1; font-size: 12px; }
+        .duck-wrapper { position: absolute; left: 0; display: flex; flex-direction: column; align-items: center; transition: left 0.1s linear; z-index: 5; width: 60px; }
+        .duck-img { width: 50px; height: auto; transform: scaleX(-1); }
+        .duck-label { font-size: 10px; color: gold; font-weight: bold; background: rgba(0,0,0,0.7); padding: 0 4px; border-radius: 3px; white-space: nowrap; margin-bottom: 2px; }
         #chat-container { flex: 1; background: #111; display: flex; flex-direction: column; border: 1px solid #333; margin: 10px 10px 10px 0; border-radius: 8px; }
         #chat-messages { flex: 1; overflow-y: auto; padding: 10px; font-size: 13px; color: #00ff00; }
-        .msg { margin-bottom: 5px; padding: 3px; border-bottom: 1px solid #222; }
+        .msg { margin-bottom: 5px; padding: 3px; border-bottom: 1px solid #222; word-break: break-all; }
         #chat-input-area { padding: 10px; display: flex; background: #1a1a1a; }
-        #chat-input { flex: 1; padding: 8px; background: #000; color: #fff; border: 1px solid #444; border-radius: 4px; }
-
+        #chat-input { flex: 1; padding: 8px; background: #000; color: #fff; border: 1px solid #444; border-radius: 4px; outline: none; }
         #controls { background: #1a1a1a; padding: 15px; text-align: center; border-top: 2px solid #333; }
         button { padding: 10px 15px; margin: 5px; font-weight: bold; cursor: pointer; border-radius: 4px; border: none; }
         .btn-bet { background: #f1c40f; color: #000; }
-        #total-display { position: absolute; top: 10px; right: 20px; color: #00ffff; font-size: 22px; font-weight: bold; background: rgba(0,0,0,0.8); padding: 5px 15px; border-radius: 20px; z-index: 10; }
+        #total-display { position: absolute; top: 10px; right: 20px; color: #00ffff; font-size: 22px; font-weight: bold; background: rgba(0,0,0,0.8); padding: 5px 15px; border-radius: 20px; z-index: 10; border: 1px solid #00ffff; }
     </style>
 </head>
 <body>
@@ -52,7 +44,7 @@
                     <span class="lane-num">LÀN ${i}</span>
                     <div id="wrapper${i}" class="duck-wrapper">
                         <span class="duck-label">${duckNames[i-1]}</span>
-                        <img class="duck-img" src="Vintage-racing.gif">
+                        <img class="duck-img" src="Vintage-racing.gif" onerror="this.src='https://i.imgur.com/8Yl6SFS.gif'">
                     </div>
                 </div>`);
             }
@@ -60,7 +52,7 @@
     </div>
 
     <div id="chat-container">
-        <div style="padding: 10px; background: #222; text-align: center; font-size: 12px;">💬 BOX CHAT ONLINE</div>
+        <div style="padding: 10px; background: #222; text-align: center; font-size: 12px; font-weight: bold;">💬 BOX CHAT ONLINE</div>
         <div id="chat-messages"></div>
         <div id="chat-input-area">
             <input type="text" id="chat-input" placeholder="Nhập tin nhắn..." onkeypress="if(event.key==='Enter') sendMsg()">
@@ -69,67 +61,56 @@
 </div>
 
 <div id="controls">
-    VỊT SỐ: <input type="number" id="duck-select" value="1" min="1" max="12" style="width:40px; padding: 5px;">
+    VỊT SỐ: <input type="number" id="duck-select" value="1" min="1" max="12" style="width:45px; padding: 5px; text-align: center;">
     <button class="btn-bet" onclick="bet(1000)">+ $1000</button>
     <button class="btn-bet" onclick="bet(5000)">+ $5000</button>
-    <button style="background: red; color: white;" onclick="bet(parseInt(document.getElementById('bal-val').innerText))">ALL-IN</button>
+    <button style="background: #ff4757; color: white;" onclick="bet(parseInt(document.getElementById('bal-val').innerText))">ALL-IN</button>
 </div>
 
 <audio id="audio-player" loop><source src="Background_music.mp3" type="audio/mpeg"></audio>
 
 <script>
-    // ĐÃ SỬA: Link có đầy đủ region .asia-southeast1 và đuôi .json
+    // FIX LINK FIREBASE: Đảm bảo có asia-southeast1 và .json
     const DB = "https://duck-rascist-default-rtdb.asia-southeast1.firebasedatabase.app/.json";
     
     let bal = 5000, myBet = 0, timer = 60, isBetting = true;
     const pName = "User_" + Math.floor(Math.random() * 999);
 
-    // 1. CẬP NHẬT DỮ LIỆU TỪ FIREBASE
+    // ĐỒNG BỘ DỮ LIỆU
     setInterval(async () => {
         try {
             const r = await fetch(DB);
+            if (!r.ok) return;
             const data = await r.json();
             if(data) {
-                // Hiển thị tổng cược từ Firebase
                 document.getElementById('total-display').innerText = "🏦 TỔNG CƯỢC: $" + (data.total_bet || 0);
-                
-                // Hiển thị chat từ Firebase
                 if(data.messages) {
                     const mBox = document.getElementById('chat-messages');
                     const msgs = Array.isArray(data.messages) ? data.messages : Object.values(data.messages);
                     mBox.innerHTML = msgs.map(m => {
-                        if (typeof m === 'object') {
-                            return `<div class="msg"><b style="color:#fff">${m.u}:</b> ${m.t}</div>`;
-                        }
-                        return `<div class="msg">${m}</div>`; // Fallback cho tin nhắn khởi tạo
+                        if (typeof m === 'object' && m.u) return `<div class="msg"><b>${m.u}:</b> ${m.t}</div>`;
+                        return `<div class="msg"><i>${m}</i></div>`;
                     }).join('');
                     mBox.scrollTop = mBox.scrollHeight;
                 }
             }
-        } catch(e) { console.error("Lỗi sync:", e); }
-    }, 1500);
+        } catch(e) {}
+    }, 2000);
 
-    // 2. HÀM GỬI CHAT
-    async function sendMsg(customTxt = null) {
+    async function sendMsg(txt = null) {
         const inp = document.getElementById('chat-input');
-        const txt = customTxt || inp.value;
-        if(!txt) return;
-
+        const val = txt || inp.value; if(!val) return;
         try {
             const r = await fetch(DB);
             const d = await r.json();
             let ms = d.messages && Array.isArray(d.messages) ? d.messages : [];
-            if (typeof ms[0] === 'string') ms = []; // Dọn dẹp tin nhắn khởi tạo nếu cần
-            
-            ms.push({ u: pName, t: txt });
-            if(ms.length > 20) ms.shift(); 
-            
-            await fetch(DB, { method: 'PATCH', body: JSON.stringify({ messages: ms }) });
+            ms.push({ u: pName, t: val });
+            if(ms.length > 15) ms.shift();
+            await fetch(DB, { method: 'PUT', body: JSON.stringify({ ...d, messages: ms }) });
             inp.value = "";
-        } catch(e) { console.error("Lỗi gửi chat:", e); }
+        } catch(e) {}
     }
 
-    // 3. HÀM ĐẶT CƯỢC
     async function bet(amt) {
         if(!isBetting || bal < amt) return;
         bal -= amt; myBet += amt;
@@ -140,43 +121,30 @@
         try {
             const r = await fetch(DB);
             const d = await r.json();
-            const currentTotal = parseInt(d.total_bet) || 0;
-            const newTotal = currentTotal + amt;
-            
+            const newTotal = (parseInt(d.total_bet) || 0) + amt;
             await fetch(DB, { method: 'PATCH', body: JSON.stringify({ total_bet: newTotal }) });
             sendMsg("đã cược $" + amt + " vào vịt " + document.getElementById('duck-select').value);
-        } catch(e) { console.error("Lỗi đặt cược:", e); }
+        } catch(e) {}
     }
 
-    // 4. ĐẾM NGƯỢC
     let cd = setInterval(() => {
-        if(--timer > 0) {
-            document.getElementById('timer-display').innerText = "⏳ ĐỢI CƯỢC: " + timer + "s";
-        } else {
-            clearInterval(cd);
-            run();
-        }
+        if(--timer > 0) document.getElementById('timer-display').innerText = "⏳ ĐỢI CƯỢC: " + timer + "s";
+        else { clearInterval(cd); run(); }
     }, 1000);
 
-    // 5. CHẠY ĐUA
     function run() {
         isBetting = false;
-        document.getElementById('timer-display').innerText = "🚀 ĐUA TỬ THẦN!";
+        document.getElementById('timer-display').innerText = "🚀 ĐANG ĐUA!";
         let p = new Array(12).fill(0);
-        const tw = document.getElementById('track-container').offsetWidth - 80;
-
+        const tw = document.getElementById('track-container').offsetWidth - 70;
         let game = setInterval(() => {
             for(let i=0; i<12; i++){
-                p[i] += Math.random() * 7;
+                p[i] += Math.random() * 6;
                 document.getElementById('wrapper'+(i+1)).style.left = p[i] + "px";
                 if(p[i] > tw) {
                     clearInterval(game);
-                    alert("VỊT SỐ " + (i+1) + " VỀ NHẤT!");
-                    // Reset tổng cược cho ván sau về 0
-                    fetch(DB, { method: 'PATCH', body: JSON.stringify({ total_bet: 0 }) })
-                    .then(() => {
-                        setTimeout(() => location.reload(), 2000);
-                    });
+                    alert("VỊT SỐ " + (i+1) + " THẮNG!");
+                    fetch(DB, { method: 'PATCH', body: JSON.stringify({ total_bet: 0 }) }).then(()=>location.reload());
                 }
             }
         }, 50);
