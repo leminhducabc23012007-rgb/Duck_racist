@@ -2,13 +2,11 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>FIDÉ CASINO - MƯỢT & TỐC ĐỘ</title>
+    <title>FIDÉ CASINO - ĐỒNG BỘ THÔNG BÁO</title>
     <style>
         body { background: #0a0a0a; color: white; font-family: 'Segoe UI', Arial; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         #header { background: #1a1a1a; padding: 15px; display: flex; justify-content: space-around; border-bottom: 2px solid #333; align-items: center; }
         .stat-box { font-size: 18px; font-weight: bold; }
-        
-        /* Nút nạp tiền */
         .btn-deposit { background: #2ecc71; color: white; padding: 8px 15px; border-radius: 5px; cursor: pointer; border: none; font-weight: bold; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% {box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.4);} 70% {box-shadow: 0 0 0 10px rgba(46, 204, 113, 0);} 100% {box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);} }
 
@@ -17,8 +15,8 @@
         .lane { height: 45px; border-bottom: 1px solid #2c3e50; position: relative; display: flex; align-items: center; }
         .lane-num { margin-left: 10px; color: #555; font-weight: bold; width: 60px; z-index: 1; font-size: 11px; }
         
-        /* FIX LỖI DỊCH CHUYỂN: Chỉnh transition mượt hơn */
-        .duck-wrapper { position: absolute; left: 0; display: flex; flex-direction: column; align-items: center; transition: left 0.3s linear; z-index: 5; width: 80px; }
+        /* Chỉnh transition cực mượt để tránh dịch chuyển */
+        .duck-wrapper { position: absolute; left: 0; display: flex; flex-direction: column; align-items: center; transition: left 0.4s linear; z-index: 5; width: 80px; }
         .duck-img { width: 45px; height: auto; transform: scaleX(-1); }
         .duck-label { font-size: 10px; color: #00ffff; font-weight: bold; background: rgba(0,0,0,0.8); padding: 1px 5px; border-radius: 3px; white-space: nowrap; margin-bottom: 2px; }
         
@@ -29,14 +27,16 @@
         .btn-bet { background: #f1c40f; color: #000; }
         #total-display { position: absolute; top: 10px; right: 20px; color: #00ffff; font-size: 20px; font-weight: bold; background: rgba(0,0,0,0.8); padding: 5px 15px; border-radius: 20px; z-index: 10; border: 1px solid #00ffff; }
         
-        #winner-overlay { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); border: 3px solid gold; padding: 30px; border-radius: 15px; text-align: center; z-index: 100; display: none; }
+        /* Overlay thông báo hiện cho tất cả mọi người */
+        #winner-overlay { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.95); border: 5px solid gold; padding: 40px; border-radius: 20px; text-align: center; z-index: 999; display: none; box-shadow: 0 0 50px rgba(255, 215, 0, 0.5); }
     </style>
 </head>
 <body>
 
 <div id="winner-overlay">
-    <div style="font-size: 20px; color:white;">🏆 CHIẾN THẮNG THUỘC VỀ 🏆</div>
-    <span id="winner-name" style="color: gold; font-size: 40px; font-weight: bold;">...</span>
+    <div style="font-size: 24px; color:white; margin-bottom: 10px;">🎊 CHÚC MỪNG CHIẾN THẮNG 🎊</div>
+    <div id="winner-name" style="color: gold; font-size: 50px; font-weight: bold; text-transform: uppercase;">...</div>
+    <div style="color: #aaa; margin-top: 20px;">Ván mới sẽ bắt đầu sau ít giây...</div>
 </div>
 
 <div id="header">
@@ -84,23 +84,26 @@
     const pName = "User_" + Math.floor(Math.random() * 999);
     const isHost = (window.location.hash === "#host");
 
-    // ĐỒNG BỘ DỮ LIỆU
+    // LẤY DỮ LIỆU TỪ SERVER
     setInterval(async () => {
         try {
             const r = await fetch(DB);
             const data = await r.json();
             if(!data) return;
 
+            // 1. Đồng bộ Timer
             const serverTime = parseInt(data.timer);
             document.getElementById('timer-display').innerText = serverTime > 0 ? "⏳ ĐỢI CƯỢC: " + serverTime + "s" : "🚀 ĐANG ĐUA!";
             isBetting = serverTime > 0;
 
+            // 2. Đồng bộ vị trí (Mượt hơn với transition dài hơn)
             if(data.race_pos) {
                 data.race_pos.forEach((pos, i) => {
                     document.getElementById('wrapper' + (i+1)).style.left = pos + "px";
                 });
             }
 
+            // 3. FIX: Hiển thị thông báo thắng cuộc cho TẤT CẢ máy
             const overlay = document.getElementById('winner-overlay');
             if(data.winner_name && data.winner_name !== "none") {
                 document.getElementById('winner-name').innerText = data.winner_name;
@@ -116,47 +119,50 @@
                 document.getElementById('chat-messages').innerHTML = msgs.map(m => `<div style="margin-bottom:5px;"><b>${m.u || 'S'}:</b> ${m.t || m}</div>`).join('');
             }
         } catch(e) {}
-    }, 300); // Quét nhanh hơn để bớt dịch chuyển
+    }, 400); 
 
     // MÁY CHỦ TÍNH TOÁN (HOST)
     if(isHost) {
         let serverTimer = 30;
-        let winnerName = "none";
+        let winnerFound = "none";
         
         setInterval(async () => {
             if(serverTimer > 0) {
                 serverTimer--;
-                winnerName = "none";
+                winnerFound = "none";
                 positions = new Array(12).fill(0);
-                await fetch(DB, { method: 'PATCH', body: JSON.stringify({ timer: serverTimer, race_pos: positions, winner_name: winnerName }) });
+                await fetch(DB, { method: 'PATCH', body: JSON.stringify({ timer: serverTimer, race_pos: positions, winner_name: "none" }) });
             } else {
-                let winnerIdx = -1;
-                // TĂNG TỐC ĐỘ X3: Nhảy bước từ 10-40px
+                // TĂNG TỐC ĐỘ SIÊU CẤP: Nhảy bước ngẫu nhiên lớn
+                let localWinnerIdx = -1;
                 positions = positions.map((p, i) => {
-                    let move = Math.random() * 30 + 10;
+                    let move = Math.random() * 35 + 10; // Tốc độ cực nhanh
                     let newP = p + move;
-                    if(newP > 900 && winnerIdx === -1) winnerIdx = i;
+                    if(newP > 950 && localWinnerIdx === -1) localWinnerIdx = i;
                     return newP;
                 });
 
-                if(winnerIdx !== -1 && winnerName === "none") {
-                    winnerName = duckNames[winnerIdx];
-                    await fetch(DB, { method: 'PATCH', body: JSON.stringify({ race_pos: positions, winner_name: winnerName }) });
+                if(localWinnerIdx !== -1 && winnerFound === "none") {
+                    winnerFound = duckNames[localWinnerIdx];
+                    // Ghi tên người thắng lên Firebase ngay lập tức
+                    await fetch(DB, { method: 'PATCH', body: JSON.stringify({ race_pos: positions, winner_name: winnerFound }) });
+                    
+                    // Giữ thông báo trong 6 giây rồi mới reset
                     setTimeout(async () => {
                         serverTimer = 30;
-                        await fetch(DB, { method: 'PATCH', body: JSON.stringify({ total_bet: 0, timer: 30, winner_name: "none" }) });
-                    }, 4000);
-                } else {
+                        await fetch(DB, { method: 'PATCH', body: JSON.stringify({ total_bet: 0, timer: 30, winner_name: "none", race_pos: new Array(12).fill(0) }) });
+                    }, 6000);
+                } else if (winnerFound === "none") {
                     await fetch(DB, { method: 'PATCH', body: JSON.stringify({ race_pos: positions, timer: 0 }) });
                 }
             }
-        }, 250); // Gửi dữ liệu cực nhanh
+        }, 400); 
     }
 
     function deposit() {
         bal += 5000;
         document.getElementById('bal-val').innerText = bal;
-        alert("Nạp thành công $5000!");
+        alert("💰 Đã nạp thêm $5000 vào tài khoản!");
     }
 
     async function sendMsg(txt = null) {
