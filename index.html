@@ -45,7 +45,6 @@
     <div id="track-container">
         <div id="total-display">🏦 TỔNG CƯỢC: $0</div>
         <script>
-            // Tên vịt bạn muốn hiện
             const duckNames = ["Vịt Chiến", "Vịt Đỏ", "Vịt Bầu", "Vịt Cỏ", "Vịt Quay", "Vịt Giời", "Vịt Xiêm", "Vịt Tàu", "Vịt Mập", "Vịt Con", "Vịt Lắc", "Vịt Fidé"];
             for(let i=1; i<=12; i++){
                 document.write(`
@@ -79,26 +78,31 @@
 <audio id="audio-player" loop><source src="Background_music.mp3" type="audio/mpeg"></audio>
 
 <script>
-    // LINK FIREBASE CHUẨN (Có HTTPS và .json)
-    const DB = "https://duavitfide-default-rtdb.firebaseio.com/.json";
+    // ĐÃ SỬA: Link có đầy đủ region .asia-southeast1 và đuôi .json
+    const DB = "https://duck-rascist-default-rtdb.asia-southeast1.firebasedatabase.app/.json";
     
     let bal = 5000, myBet = 0, timer = 60, isBetting = true;
     const pName = "User_" + Math.floor(Math.random() * 999);
 
-    // 1. CẬP NHẬT DỮ LIỆU TỪ FIREBASE (CHAT + TỔNG CƯỢC)
+    // 1. CẬP NHẬT DỮ LIỆU TỪ FIREBASE
     setInterval(async () => {
         try {
             const r = await fetch(DB);
             const data = await r.json();
             if(data) {
-                // Hiện tổng cược của mọi người
+                // Hiển thị tổng cược từ Firebase
                 document.getElementById('total-display').innerText = "🏦 TỔNG CƯỢC: $" + (data.total_bet || 0);
                 
-                // Hiện chat của mọi người
+                // Hiển thị chat từ Firebase
                 if(data.messages) {
                     const mBox = document.getElementById('chat-messages');
-                    const msgs = Object.values(data.messages);
-                    mBox.innerHTML = msgs.map(m => `<div class="msg"><b style="color:#fff">${m.u}:</b> ${m.t}</div>`).join('');
+                    const msgs = Array.isArray(data.messages) ? data.messages : Object.values(data.messages);
+                    mBox.innerHTML = msgs.map(m => {
+                        if (typeof m === 'object') {
+                            return `<div class="msg"><b style="color:#fff">${m.u}:</b> ${m.t}</div>`;
+                        }
+                        return `<div class="msg">${m}</div>`; // Fallback cho tin nhắn khởi tạo
+                    }).join('');
                     mBox.scrollTop = mBox.scrollHeight;
                 }
             }
@@ -114,12 +118,15 @@
         try {
             const r = await fetch(DB);
             const d = await r.json();
-            let ms = d.messages ? Object.values(d.messages) : [];
+            let ms = d.messages && Array.isArray(d.messages) ? d.messages : [];
+            if (typeof ms[0] === 'string') ms = []; // Dọn dẹp tin nhắn khởi tạo nếu cần
+            
             ms.push({ u: pName, t: txt });
-            if(ms.length > 15) ms.shift(); // Giữ 15 tin gần nhất
+            if(ms.length > 20) ms.shift(); 
+            
             await fetch(DB, { method: 'PATCH', body: JSON.stringify({ messages: ms }) });
             inp.value = "";
-        } catch(e) {}
+        } catch(e) { console.error("Lỗi gửi chat:", e); }
     }
 
     // 3. HÀM ĐẶT CƯỢC
@@ -130,12 +137,15 @@
         document.getElementById('my-bet-val').innerText = myBet;
         document.getElementById('audio-player').play().catch(()=>{});
 
-        const r = await fetch(DB);
-        const d = await r.json();
-        const newTotal = (d.total_bet || 0) + amt;
-        await fetch(DB, { method: 'PATCH', body: JSON.stringify({ total_bet: newTotal }) });
-        
-        sendMsg("đã cược $" + amt + " vào vịt " + document.getElementById('duck-select').value);
+        try {
+            const r = await fetch(DB);
+            const d = await r.json();
+            const currentTotal = parseInt(d.total_bet) || 0;
+            const newTotal = currentTotal + amt;
+            
+            await fetch(DB, { method: 'PATCH', body: JSON.stringify({ total_bet: newTotal }) });
+            sendMsg("đã cược $" + amt + " vào vịt " + document.getElementById('duck-select').value);
+        } catch(e) { console.error("Lỗi đặt cược:", e); }
     }
 
     // 4. ĐẾM NGƯỢC
@@ -162,8 +172,11 @@
                 if(p[i] > tw) {
                     clearInterval(game);
                     alert("VỊT SỐ " + (i+1) + " VỀ NHẤT!");
-                    // Reset tổng cược cho ván sau
-                    fetch(DB, { method: 'PATCH', body: JSON.stringify({ total_bet: 0 }) }).then(()=>location.reload());
+                    // Reset tổng cược cho ván sau về 0
+                    fetch(DB, { method: 'PATCH', body: JSON.stringify({ total_bet: 0 }) })
+                    .then(() => {
+                        setTimeout(() => location.reload(), 2000);
+                    });
                 }
             }
         }, 50);
